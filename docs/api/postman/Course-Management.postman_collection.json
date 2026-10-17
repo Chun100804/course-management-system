@@ -1,0 +1,222 @@
+{
+  "info": {
+    "_postman_id": "a40a019d-47c3-4ee3-898a-ea9d75dfdbac",
+    "name": "Course Management System",
+    "description": "API flow for student registration/login, admin course CRUD, enrollment, and enrollment listing. Set adminEmail/adminPassword and the collection baseUrl before running. A MongoDB connection and a seeded admin account are required.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000/api" },
+    { "key": "adminEmail", "value": "" },
+    { "key": "adminPassword", "value": "" },
+    { "key": "studentEmail", "value": "" },
+    { "key": "studentPassword", "value": "StudentPassword123!" },
+    { "key": "secondStudentEmail", "value": "" },
+    { "key": "secondStudentPassword", "value": "AnotherStudent123!" },
+    { "key": "studentToken", "value": "" },
+    { "key": "secondStudentToken", "value": "" },
+    { "key": "adminToken", "value": "" },
+    { "key": "courseId", "value": "" },
+    { "key": "deleteCourseId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register student",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": { "type": "text/javascript", "exec": ["pm.collectionVariables.set('studentEmail', 'student-' + Date.now() + '@example.test');"] }
+            },
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('Student account created', function () { pm.response.to.have.status(201); });", "const data = pm.response.json().data;", "pm.test('Public registration assigns STUDENT role', function () { pm.expect(data.user.role).to.eql('STUDENT'); });", "pm.collectionVariables.set('studentToken', data.token);"] }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Postman Student\",\n  \"email\": \"{{studentEmail}}\",\n  \"password\": \"{{studentPassword}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/auth/register"
+          }
+        },
+        {
+          "name": "Login student",
+          "event": [
+            { "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Student login successful', function () { pm.response.to.have.status(200); });", "pm.test('Student login returns STUDENT role', function () { pm.expect(pm.response.json().data.user.role).to.eql('STUDENT'); });", "pm.collectionVariables.set('studentToken', pm.response.json().data.token);"] } }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{studentEmail}}\",\n  \"password\": \"{{studentPassword}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Login admin",
+          "event": [
+          { "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Admin login successful', function () { pm.response.to.have.status(200); });", "pm.test('Admin account has ADMIN role', function () { pm.expect(pm.response.json().data.user.role).to.eql('ADMIN'); });", "pm.collectionVariables.set('adminToken', pm.response.json().data.token);"] } }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Register second student for capacity test",
+          "event": [
+            { "listen": "prerequest", "script": { "type": "text/javascript", "exec": ["pm.collectionVariables.set('secondStudentEmail', 'student-capacity-' + Date.now() + '@example.test');"] } },
+            { "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Second student account created', function () { pm.response.to.have.status(201); });", "pm.collectionVariables.set('secondStudentToken', pm.response.json().data.token);"] } }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Capacity Test Student\",\n  \"email\": \"{{secondStudentEmail}}\",\n  \"password\": \"{{secondStudentPassword}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/auth/register"
+          }
+        },
+        {
+          "name": "Login second student",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Second student login successful', function () { pm.response.to.have.status(200); });", "pm.collectionVariables.set('secondStudentToken', pm.response.json().data.token);"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{secondStudentEmail}}\",\n  \"password\": \"{{secondStudentPassword}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Courses",
+      "item": [
+        {
+          "name": "List courses",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Course list returned', function () { pm.response.to.have.status(200); });"] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/courses?search=" }
+        },
+        {
+          "name": "Create course",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Course created', function () { pm.response.to.have.status(201); });", "pm.collectionVariables.set('courseId', pm.response.json().data._id);"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Postman API Testing\",\n  \"description\": \"Course created by the Postman collection for CRUD and enrollment verification.\",\n  \"instructor\": \"Test Instructor\",\n  \"fee\": 1250000,\n  \"capacity\": 1\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/courses"
+          }
+        },
+        {
+          "name": "Get course details",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Course details returned', function () { pm.response.to.have.status(200); });"] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/courses/{{courseId}}" }
+        },
+        {
+          "name": "Update course",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Course updated', function () { pm.response.to.have.status(200); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Postman API Testing - Updated\",\n  \"description\": \"Updated course description.\",\n  \"instructor\": \"Test Instructor\",\n  \"fee\": 1500000,\n  \"capacity\": 1\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/courses/{{courseId}}"
+          }
+        },
+        {
+          "name": "Create disposable course for delete",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Disposable course created', function () { pm.response.to.have.status(201); });", "pm.collectionVariables.set('deleteCourseId', pm.response.json().data._id);"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Disposable Postman Course\",\n  \"description\": \"Temporary empty course used to verify delete.\",\n  \"instructor\": \"Test Instructor\",\n  \"fee\": 0,\n  \"capacity\": 10\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/courses"
+          }
+        },
+        {
+          "name": "Delete empty course",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Empty course deleted', function () { pm.response.to.have.status(204); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "DELETE",
+            "url": "{{baseUrl}}/courses/{{deleteCourseId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Enrollments",
+      "item": [
+        {
+          "name": "Enroll student",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Enrollment created', function () { pm.response.to.have.status(201); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{studentToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"courseId\": \"{{courseId}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/enrollments"
+          }
+        },
+        {
+          "name": "Reject duplicate enrollment",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Duplicate enrollment rejected', function () { pm.response.to.have.status(409); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{studentToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"courseId\": \"{{courseId}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/enrollments"
+          }
+        },
+        {
+          "name": "Reject enrollment when course is full",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Full course enrollment rejected', function () { pm.response.to.have.status(409); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{secondStudentToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"courseId\": \"{{courseId}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/enrollments"
+          }
+        },
+        {
+          "name": "List my enrollments",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Student enrollment list returned', function () { pm.response.to.have.status(200); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{studentToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/enrollments/mine"
+          }
+        },
+        {
+          "name": "List enrollments for course",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Admin enrollment list returned', function () { pm.response.to.have.status(200); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/enrollments/course/{{courseId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get current user",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Authenticated user returned', function () { pm.response.to.have.status(200); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{studentToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/users/me"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,6 +1,2 @@
-export const USER_ROLES = {
-  ADMIN: 'ADMIN',
-  STUDENT: 'STUDENT',
-} as const;
-
-export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
+export { USER_ROLES } from '@cms/shared';
+export type { UserRole } from '@cms/shared';

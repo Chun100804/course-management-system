@@ -6,6 +6,7 @@ import { errorHandler } from './common/middleware/errorHandler.js';
 import { notFound } from './common/middleware/notFound.js';
 import { apiRouter } from './routes/index.js';
 
+// Export the Express app without opening a network listener so tests can use Supertest.
 export const app = express();
 
 app.use(express.json());

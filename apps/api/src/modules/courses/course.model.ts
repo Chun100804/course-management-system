@@ -1,4 +1,6 @@
-import { model, models, Schema } from 'mongoose';
+import mongoose from 'mongoose';
+
+const { Schema } = mongoose;
 
 export interface Course {
   title: string;
@@ -31,4 +33,4 @@ const courseSchema = new Schema<Course>(
   { timestamps: true, collection: 'courses' },
 );
 
-export const CourseModel = models.Course ?? model<Course>('Course', courseSchema);
+export const CourseModel = mongoose.models.Course ?? mongoose.model<Course>('Course', courseSchema);

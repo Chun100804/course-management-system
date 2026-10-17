@@ -1,5 +1,7 @@
-import { model, models, Schema } from 'mongoose';
+import mongoose from 'mongoose';
 import { USER_ROLES, type UserRole } from '../../common/constants/roles.js';
+
+const { Schema } = mongoose;
 
 export interface User {
   name: string;
@@ -23,4 +25,4 @@ const userSchema = new Schema<User>(
   { timestamps: true, collection: 'users' },
 );
 
-export const UserModel = models.User ?? model<User>('User', userSchema);
+export const UserModel = mongoose.models.User ?? mongoose.model<User>('User', userSchema);

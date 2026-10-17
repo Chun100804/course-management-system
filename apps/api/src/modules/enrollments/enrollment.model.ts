@@ -1,4 +1,6 @@
-import { model, models, Schema, Types } from 'mongoose';
+import mongoose, { Types } from 'mongoose';
+
+const { Schema } = mongoose;
 
 export interface Enrollment {
   studentId: Types.ObjectId;
@@ -20,4 +22,4 @@ enrollmentSchema.index({ studentId: 1, courseId: 1 }, { unique: true });
 enrollmentSchema.index({ courseId: 1 });
 
 export const EnrollmentModel =
-  models.Enrollment ?? model<Enrollment>('Enrollment', enrollmentSchema);
+  mongoose.models.Enrollment ?? mongoose.model<Enrollment>('Enrollment', enrollmentSchema);
