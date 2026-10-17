@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "a40a019d-47c3-4ee3-898a-ea9d75dfdbac",
     "name": "Course Management System",
-    "description": "API flow for student registration/login, admin course CRUD, enrollment, and enrollment listing. Set adminEmail/adminPassword and the collection baseUrl before running. A MongoDB connection and a seeded admin account are required.",
+    "description": "API flow for student registration/login, admin course CRUD, enrollment, and enrollment listing. Set adminEmail and adminPassword in collection variables before sending requests. A MongoDB connection and a seeded admin account are required.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -32,7 +32,7 @@
             },
             {
               "listen": "test",
-              "script": { "type": "text/javascript", "exec": ["pm.test('Student account created', function () { pm.response.to.have.status(201); });", "const data = pm.response.json().data;", "pm.test('Public registration assigns STUDENT role', function () { pm.expect(data.user.role).to.eql('STUDENT'); });", "pm.collectionVariables.set('studentToken', data.token);"] }
+              "script": { "type": "text/javascript", "exec": ["pm.test('Student account created', function () { pm.response.to.have.status(201); });", "var registration = pm.response.json().data;", "pm.test('Public registration assigns STUDENT role', function () { pm.expect(registration.user.role).to.eql('STUDENT'); });", "pm.collectionVariables.set('studentToken', registration.token);"] }
             }
           ],
           "request": {
