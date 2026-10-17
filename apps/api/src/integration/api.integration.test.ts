@@ -80,10 +80,15 @@ afterAll(async () => {
 describe('Course management API integration', () => {
   it('registers a student, rejects duplicate email, and validates password length', async () => {
     const email = uniqueEmail('register');
-    const created = await registerStudent(email);
-    expect(created.response.status).toBe(201);
-    expect(created.response.body.data.user).toMatchObject({ email, role: USER_ROLES.STUDENT });
-    expect(created.response.body.data.token).toEqual(expect.any(String));
+    const created = await request(app).post('/api/auth/register').send({
+      name: 'Integration Student',
+      email,
+      password,
+      role: USER_ROLES.ADMIN,
+    });
+    expect(created.status).toBe(201);
+    expect(created.body.data.user).toMatchObject({ email, role: USER_ROLES.STUDENT });
+    expect(created.body.data.token).toEqual(expect.any(String));
 
     const duplicate = await registerStudent(email);
     expect(duplicate.response.status).toBe(409);
@@ -163,6 +168,16 @@ describe('Course management API integration', () => {
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ courseId: course.body.data._id });
     expect(response.status).toBe(403);
+  });
+
+  it('rejects guest enrollment attempts', async () => {
+    const course = await createCourse(adminToken);
+    expect(course.status).toBe(201);
+
+    const response = await request(app)
+      .post('/api/enrollments')
+      .send({ courseId: course.body.data._id });
+    expect(response.status).toBe(401);
   });
 
   it('allows a Student to enroll once and rejects a duplicate enrollment', async () => {
